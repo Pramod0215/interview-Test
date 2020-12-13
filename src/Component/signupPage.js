@@ -1,159 +1,117 @@
- // eslint-disable-next-lineimport React, { Component } from 'react';
+ // eslint-disable-next-lineimport
+import React, {Component } from 'react';
 import { Link} from "react-router-dom";
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import moment from "moment";
-import React, { useState } from 'react';
-import { Upload } from 'antd';
-import ImgCrop from 'antd-img-crop';
 
-const Photo = () => {
-  const [fileList, setFileList] = useState([]);
 
-  const onChange = ({ fileList: newFileList }) => {
-    setFileList(newFileList);
-    setTimeout(()=>{
-      console.log(newFileList)
-    },3000)
-    
-  };
-
-  const onPreview = async file => {
-    let src = file.url;
-    if (!src) {
-      src = await new Promise(resolve => {
+class Photo extends Component {
+    state = {
+      src: null,
+      crop: {
+        unit: '%',
+        width: 30,
+        aspect: 16 / 9,
+      },
+    };
+  
+    onSelectFile = e => {
+      if (e.target.files && e.target.files.length > 0) {
         const reader = new FileReader();
-        reader.readAsDataURL(file.originFileObj);
-        reader.onload = () => resolve(reader.result);
+        reader.addEventListener('load', () =>
+          this.setState({ src: reader.result })
+        );
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    };
+  
+    // If you setState the crop in here you should return false.
+    onImageLoaded = image => {
+      this.imageRef = image;
+    };
+  
+    onCropComplete = crop => {
+      this.makeClientCrop(crop);
+    };
+  
+    onCropChange = (crop, percentCrop) => {
+      // You could also use percentCrop:
+      // this.setState({ crop: percentCrop });
+      this.setState({ crop });
+    };
+  
+    async makeClientCrop(crop) {
+      if (this.imageRef && crop.width && crop.height) {
+        const croppedImageUrl = await this.getCroppedImg(
+          this.imageRef,
+          crop,
+          'newFile.jpeg'
+        );
+        this.setState({ croppedImageUrl });
+      }
+    }
+  
+    getCroppedImg(image, crop, fileName) {
+      const canvas = document.createElement('canvas');
+      const scaleX = image.naturalWidth / image.width;
+      const scaleY = image.naturalHeight / image.height;
+      canvas.width = crop.width;
+      canvas.height = crop.height;
+      const ctx = canvas.getContext('2d');
+  
+      ctx.drawImage(
+        image,
+        crop.x * scaleX,
+        crop.y * scaleY,
+        crop.width * scaleX,
+        crop.height * scaleY,
+        0,
+        0,
+        crop.width,
+        crop.height
+      );
+  
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (!blob) {
+            //reject(new Error('Canvas is empty'));
+            console.error('Canvas is empty');
+            return;
+          }
+          blob.name = fileName;
+          window.URL.revokeObjectURL(this.fileUrl);
+          this.fileUrl = window.URL.createObjectURL(blob);
+          resolve(this.fileUrl);
+        }, 'image/jpeg');
       });
     }
-    const image = new Image();
-    image.src = src;
-    const imgWindow = window.open(src);
-    imgWindow.document.write(image.outerHTML);
-  };
-
-  return (
-    <ImgCrop rotate>
-      <Upload
-        action="http://159.65.237.4:8080/admin/upload"
-        listType="picture-card"
-        fileList={fileList}
-        onChange={onChange}
-        onPreview={onPreview}
-      >
-        {fileList.length < 5 && '+ Upload'}
-      </Upload>
-    </ImgCrop>
-  );
-};
-
-// class Photo extends Component {
-//     state = {
-//       src: null,
-//       crop: {
-//         unit: '%',
-//         width: 30,
-//         aspect: 16 / 9,
-//       },
-//     };
   
-//     onSelectFile = e => {
-//       if (e.target.files && e.target.files.length > 0) {
-//         const reader = new FileReader();
-//         reader.addEventListener('load', () =>
-//           this.setState({ src: reader.result })
-//         );
-//         reader.readAsDataURL(e.target.files[0]);
-//       }
-//     };
+    render() {
+      const { crop, croppedImageUrl, src } = this.state;
   
-//     // If you setState the crop in here you should return false.
-//     onImageLoaded = image => {
-//       this.imageRef = image;
-//     };
-  
-//     onCropComplete = crop => {
-//       this.makeClientCrop(crop);
-//     };
-  
-//     onCropChange = (crop, percentCrop) => {
-//       // You could also use percentCrop:
-//       // this.setState({ crop: percentCrop });
-//       this.setState({ crop });
-//     };
-  
-//     async makeClientCrop(crop) {
-//       if (this.imageRef && crop.width && crop.height) {
-//         const croppedImageUrl = await this.getCroppedImg(
-//           this.imageRef,
-//           crop,
-//           'newFile.jpeg'
-//         );
-//         this.setState({ croppedImageUrl });
-//       }
-//     }
-  
-//     getCroppedImg(image, crop, fileName) {
-//       const canvas = document.createElement('canvas');
-//       const scaleX = image.naturalWidth / image.width;
-//       const scaleY = image.naturalHeight / image.height;
-//       canvas.width = crop.width;
-//       canvas.height = crop.height;
-//       const ctx = canvas.getContext('2d');
-  
-//       ctx.drawImage(
-//         image,
-//         crop.x * scaleX,
-//         crop.y * scaleY,
-//         crop.width * scaleX,
-//         crop.height * scaleY,
-//         0,
-//         0,
-//         crop.width,
-//         crop.height
-//       );
-  
-//       return new Promise((resolve, reject) => {
-//         canvas.toBlob(blob => {
-//           if (!blob) {
-//             //reject(new Error('Canvas is empty'));
-//             console.error('Canvas is empty');
-//             return;
-//           }
-//           blob.name = fileName;
-//           window.URL.revokeObjectURL(this.fileUrl);
-//           this.fileUrl = window.URL.createObjectURL(blob);
-//           resolve(this.fileUrl);
-//         }, 'image/jpeg');
-//       });
-//     }
-  
-//     render() {
-//       const { crop, croppedImageUrl, src } = this.state;
-  
-//       return (
-//         <div className="App">
-//           <div>
-//             <input type="file" accept="image/*" onChange={this.onSelectFile} />
-//           </div>
-//           {src && (
-//             <ReactCrop
-//               src={src}
-//               crop={crop}
-//               ruleOfThirds
-//               onImageLoaded={this.onImageLoaded}
-//               onComplete={this.onCropComplete}
-//               onChange={this.onCropChange}
-//             />
-//           )}
-//           {croppedImageUrl && (
-//             <img alt="Crop" style={{ maxWidth: '100%' }} src={croppedImageUrl} />
-//           )}
-//         </div>
-//       );
-//     }
-//   }
+      return (
+        <div className="App">
+          <div>
+            <input type="file" accept="image/*" onChange={this.onSelectFile} />
+          </div>
+          {src && (
+            <ReactCrop
+              src={src}
+              crop={crop}
+              ruleOfThirds
+              onImageLoaded={this.onImageLoaded}
+              onComplete={this.onCropComplete}
+              onChange={this.onCropChange}
+            />
+          )}
+          {croppedImageUrl && (
+            <img alt="Crop" style={{ maxWidth: '100%' }} src={croppedImageUrl} />
+          )}
+        </div>
+      );
+    }
+  }
 
  
 
@@ -167,6 +125,7 @@ class SignUp extends React.Component {
             zoom: 1,
             aspect: 4 / 3,
             date: new Date(),
+            name:'',
             dob:''
         }
     }
@@ -194,23 +153,15 @@ class SignUp extends React.Component {
         .then(() => {
           
           var event = {
-            'summary': 'Awesome Event!',
-            'location': '800 Howard St., San Francisco, CA 94103',
-            'description': 'Really great refreshments',
-            'start': {
-              'dateTime': '2020-06-28T09:00:00-07:00',
-              'timeZone': 'America/Los_Angeles'
-            },
-            'end': {
-              'dateTime': '2020-06-28T17:00:00-07:00',
-              'timeZone': 'America/Los_Angeles'
-            },
+            'Name': this.state.name,
+            'Gender': this.state.gender,
+            'Birthday': this.state.dob,
+            
             'recurrence': [
               'RRULE:FREQ=DAILY;COUNT=2'
             ],
             'attendees': [
-              {'email': 'lpage@example.com'},
-              {'email': 'sbrin@example.com'}
+              {'email': this.state.email}
             ],
             'reminders': {
               'useDefault': false,
@@ -231,7 +182,7 @@ class SignUp extends React.Component {
             window.open(event.htmlLink)
           })
           
-  
+          window.location.href='/profile'
           /*
               Uncomment the following block to get events
           */
@@ -257,12 +208,15 @@ class SignUp extends React.Component {
     onSubmit = (e) => {
         e.preventDefault();
         if(e.target.password.value===e.target.confirmpassword.value){
-            this.setState({
-                dob:e.target.dob.value
-            },()=>this.handleClick())
+          this.setState({
+            dob:e.target.dob.value,
+            name:e.target.name.value,
+            email: e.target.email.value,
+        },()=>this.handleClick())
             const data = {
                 name: e.target.name.value,
                 email: e.target.email.value,
+                gender:e.target.gender.value,
                 phone: e.target.phone.value,
                 dob: e.target.dob.value,
                 img: localStorage.getItem('croppedImageUrl'),
@@ -270,7 +224,9 @@ class SignUp extends React.Component {
             }
             console.log(data)
             localStorage.setItem('data', JSON.stringify(data))
+           
 
+         
         }
         else{
             alert('Password is not matched!')
@@ -320,6 +276,12 @@ class SignUp extends React.Component {
                             <input type='email' name='email' placeholder='Enter your email' title='Enter your email' required/>
                             <label className='label'>Phone</label>
                             <input type='number'min={10} maxLength={10} placeholder='Enter your phone number' name='phone' title='Enter your phone' required/>
+                           <label>Gender</label>
+                           <select name='gender' required>
+                             <option value='Male'>Male</option>
+                             <option value='Female'>Female</option>
+                             <option value='other'>Other</option>
+                           </select>
                             <label className='label'>Date of birth</label>
                             <input type='date' name='dob'  max={moment(
                                 new Date(),

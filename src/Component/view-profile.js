@@ -40,6 +40,10 @@ class ViewProfile extends Component {
                                 <div> {this.state.data.phone}</div>
                             </div>
                             <div className='row label'>
+                                <div className=' padding-right-10'>Gender: </div>
+                                <div> {this.state.data.gender}</div>
+                            </div>
+                            <div className='row label'>
 
                                 <div className=' padding-right-10'>Date of birth: </div>
                                 <div> {this.state.data.dob}</div>
