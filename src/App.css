@@ -1846,8 +1846,8 @@ section {
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  margin-left: 25%;
-  margin-right: 25%;
+  margin-left: 20%;
+  margin-right: 15%;
   margin-top: 40px;
   padding-bottom: 50px;
   margin-bottom: 20px;
@@ -1936,4 +1936,7 @@ input{
 }
 .padding-top-20{
   padding-top: 20px;
+}
+#header{
+  background-color: #007bff;
 }
